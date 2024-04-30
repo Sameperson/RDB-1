@@ -1,5 +1,7 @@
 use std::collections::HashMap;
+use serde::{Deserialize, Serialize};
 
+#[derive(Serialize, Deserialize)]
 pub struct Edge {
     id: u64,
     from: u64,

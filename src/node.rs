@@ -1,5 +1,7 @@
 use std::collections::HashMap;
+use serde::{Deserialize, Serialize};
 
+#[derive(Serialize, Deserialize)]
 pub struct Node {
     id: u64,
     label: Option<String>,
