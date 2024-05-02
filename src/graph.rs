@@ -44,6 +44,35 @@ impl Graph {
     pub fn get_edge(&self, id: u64) -> Option<&Edge> {
         self.edges.get(&id)
     }
+
+    pub fn delete_node(&mut self, id: u64) {
+        if self.nodes.contains_key(&id) {
+            self.nodes.remove(&id);
+            self.adjacency_list.remove(&id);
+            self.edges.retain(|_, e| e.from != id && e.to != id);
+            self.adjacency_list.values_mut().for_each(|edges| {
+                edges.retain(|&e_id| {
+                    let e = self.edges.get(&e_id).unwrap();
+                    e.from != id && e.to != id
+                });
+            });
+        }
+    }
+
+    pub fn delete_node_please(&mut self, id: u64) -> Result<(), String> {
+        if self.can_safely_delete(id) {
+            self.delete_node(id);
+            Ok(())
+        } else {
+            Err(format!("Node {} cannot be safely deleted.", id))
+        }
+    }
+
+    // Helper function to determine if a node can be safely deleted.
+    // TODO: Implement this function in more detail
+    fn can_safely_delete(&self, id: u64) -> bool {
+        !self.adjacency_list.get(&id).map_or(false, |edges| !edges.is_empty())
+    }
 }
 
 #[cfg(test)]

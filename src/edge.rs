@@ -4,8 +4,8 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize)]
 pub struct Edge {
     id: u64,
-    from: u64,
-    to: u64,
+    pub(crate) from: u64,
+    pub(crate) to: u64,
     label: Option<String>,
     properties: HashMap<String, String>,
 }
