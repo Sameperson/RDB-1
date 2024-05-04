@@ -22,8 +22,9 @@ impl Graph {
         }
     }
 
-    pub fn add_node(&mut self, node: Node) {
-        self.nodes.insert(node.id(), node);
+    pub fn add_node(&mut self, id: u64, label: String) {
+        let node = Node::new(id, Some(label));
+        self.nodes.insert(id, node);
     }
 
     pub fn add_edge(&mut self, edge: Edge) {
@@ -82,8 +83,8 @@ mod tests {
     #[test]
     fn test_add_and_retrieve_node() {
         let mut graph = Graph::new();
-        let node = Node::new(1, Some("Label".to_string()));
-        graph.add_node(node);
+        // Updated to pass ID and label directly
+        graph.add_node(1, "Label".to_string());
 
         assert!(graph.get_node(1).is_some());
     }
@@ -91,10 +92,8 @@ mod tests {
     #[test]
     fn test_add_and_retrieve_edge() {
         let mut graph = Graph::new();
-        let node1 = Node::new(1, Some("Label".to_string()));
-        let node2 = Node::new(2, Some("Label".to_string()));
-        graph.add_node(node1);
-        graph.add_node(node2);
+        graph.add_node(1, "Label".to_string());
+        graph.add_node(2, "Label".to_string());
 
         let edge = Edge::new(1, 1, 2, Some("RelatedTo".to_string()));
         graph.add_edge(edge);
@@ -103,3 +102,4 @@ mod tests {
         assert_eq!(graph.adjacency_list.get(&1).unwrap().len(), 1);
     }
 }
+
