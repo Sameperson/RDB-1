@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use serde::{Deserialize, Serialize};
 
 use crate::node::Node;
@@ -7,24 +7,23 @@ use crate::edge::Edge;
 #[derive(Serialize, Deserialize)]
 pub struct Graph {
     pub nodes: HashMap<u64, Node>,
-
     pub edges: HashMap<u64, Edge>,
-
     pub adjacency_list: HashMap<u64, Vec<u64>>,
+    pub core_nodes: HashSet<u64>,  // To track core nodes
 }
 
 impl Graph {
     pub fn new() -> Self {
-        Graph {
+        Self {
             nodes: HashMap::new(),
             edges: HashMap::new(),
             adjacency_list: HashMap::new(),
+            core_nodes: HashSet::new(),
         }
     }
 
-    pub fn add_node(&mut self, id: u64, label: String) {
-        let node = Node::new(id, Some(label));
-        self.nodes.insert(id, node);
+    pub fn add_node(&mut self, node: Node) {
+        self.nodes.insert(node.id(), node);
     }
 
     pub fn add_edge(&mut self, edge: Edge) {
@@ -74,6 +73,28 @@ impl Graph {
     fn can_safely_delete(&self, id: u64) -> bool {
         !self.adjacency_list.get(&id).map_or(false, |edges| !edges.is_empty())
     }
+
+    pub fn add_core_node(&mut self, node_id: u64) -> Result<(), String> {
+        if self.nodes.contains_key(&node_id) {
+            self.core_nodes.insert(node_id);
+            Ok(())
+        } else {
+            Err("Node does not exist".to_string())
+        }
+    }
+
+    pub fn is_core_node(&self, node_id: u64) -> bool {
+        self.core_nodes.contains(&node_id)
+    }
+
+    pub fn remove_core_node(&mut self, node_id: u64) -> Result<(), String> {
+        if self.core_nodes.contains(&node_id) {
+            self.core_nodes.remove(&node_id);
+            Ok(())
+        } else {
+            Err("Node is not a core node".to_string())
+        }
+    }
 }
 
 #[cfg(test)]
@@ -83,8 +104,8 @@ mod tests {
     #[test]
     fn test_add_and_retrieve_node() {
         let mut graph = Graph::new();
-        // Updated to pass ID and label directly
-        graph.add_node(1, "Label".to_string());
+        let node = Node::new(1, Some("Label".to_string()));
+        graph.add_node(node);
 
         assert!(graph.get_node(1).is_some());
     }
@@ -92,8 +113,10 @@ mod tests {
     #[test]
     fn test_add_and_retrieve_edge() {
         let mut graph = Graph::new();
-        graph.add_node(1, "Label".to_string());
-        graph.add_node(2, "Label".to_string());
+        let node1 = Node::new(1, Some("Label".to_string()));
+        let node2 = Node::new(2, Some("Label".to_string()));
+        graph.add_node(node1);
+        graph.add_node(node2);
 
         let edge = Edge::new(1, 1, 2, Some("RelatedTo".to_string()));
         graph.add_edge(edge);
@@ -102,4 +125,3 @@ mod tests {
         assert_eq!(graph.adjacency_list.get(&1).unwrap().len(), 1);
     }
 }
-
