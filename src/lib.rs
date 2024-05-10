@@ -2,9 +2,10 @@ pub mod node;
 pub mod edge;
 pub mod graph;
 pub mod storage;
-mod query_parser;
+pub mod query_parser;
 
-use graph::Graph;
+use crate::node::Node;
+use crate::graph::Graph;
 use std::str::FromStr;
 
 pub enum Query {

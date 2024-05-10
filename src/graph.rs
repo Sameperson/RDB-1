@@ -1,8 +1,8 @@
 use std::collections::{HashMap, HashSet};
 use serde::{Deserialize, Serialize};
 
-use crate::node::Node;
 use crate::edge::Edge;
+use crate::node::Node;
 
 #[derive(Serialize, Deserialize)]
 pub struct Graph {

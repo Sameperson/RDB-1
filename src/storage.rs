@@ -34,8 +34,10 @@ mod tests {
     #[test]
     fn test_save_and_load_graph() {
         let mut graph = Graph::new();
-        graph.add_node(1, "Node1".to_string());  // ID and Label are now directly passed
-        graph.add_node(2, "Node2".to_string());
+        let node1 = Node::new(1, Some("Node1".to_string()));
+        let node2 = Node::new(2, Some("Node2".to_string()));
+        graph.add_node(node1);  // ID and Label are now directly passed
+        graph.add_node(node2);
 
         let edge = Edge::new(1, 1, 2, Some("connects".to_string()));
         graph.add_edge(edge);
