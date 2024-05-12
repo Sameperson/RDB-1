@@ -1,4 +1,5 @@
-use std::collections::{HashMap, HashSet};
+use std::cmp::Ordering;
+use std::collections::{BinaryHeap, HashMap, HashSet};
 use serde::{Deserialize, Serialize};
 
 use crate::edge::Edge;
@@ -26,16 +27,13 @@ impl Graph {
         self.nodes.insert(node.id(), node);
     }
 
-    pub fn add_edge(&mut self, edge: Edge) {
-        let from = edge.from();
-        let to = edge.to();
-
-        self.adjacency_list.entry(from).or_insert_with(Vec::new).push(edge.id());
-
-        self.adjacency_list.entry(to).or_insert_with(Vec::new).push(edge.id());
-
-        self.edges.insert(edge.id(), edge);
+    pub fn add_edge(&mut self, from: u64, to: u64, weight: f64, label: Option<String>) {
+        let edge_id = self.generate_edge_id(); // Assume you have this function to generate unique IDs
+        let edge = Edge::new(edge_id, from, to, weight, label);
+        self.edges.insert(edge_id, edge);
+        self.adjacency_list.entry(from).or_insert_with(Vec::new).push(edge_id);
     }
+
 
     pub fn get_node(&self, id: u64) -> Option<&Node> {
         self.nodes.get(&id)
@@ -95,7 +93,49 @@ impl Graph {
             Err("Node is not a core node".to_string())
         }
     }
+
+    pub fn dijkstra(&self, start_node: u64) -> HashMap<u64, f64> {
+        let mut distances = HashMap::new();
+        let mut priority_queue = BinaryHeap::new();
+
+        for &node in &self.nodes {
+            distances.insert(node, f64::INFINITY);
+        }
+        distances.insert(start_node, 0.0);
+        priority_queue.push((FloatOrd(0.0), start_node));
+
+        while let Some((FloatOrd(cost), u)) = priority_queue.pop() {
+            if cost > distances[&u] {
+                continue;
+            }
+            if let Some(edges) = self.adjacency_list.get(&u) {
+                for &edge_id in edges {
+                    let edge = &self.edges[&edge_id];
+                    let next = edge.to;
+                    let next_cost = cost + edge.weight();
+                    if next_cost < distances[&next] {
+                        distances.insert(next, next_cost);
+                        priority_queue.push((FloatOrd(-next_cost), next));
+                    }
+                }
+            }
+        }
+
+        distances
+    }
 }
+
+#[derive(PartialEq, PartialOrd)]
+struct FloatOrd(f64);
+
+impl Eq for FloatOrd {}
+
+impl Ord for FloatOrd {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.partial_cmp(other).unwrap_or(Ordering::Equal)
+    }
+}
+
 
 #[cfg(test)]
 mod tests {
