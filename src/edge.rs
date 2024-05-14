@@ -6,7 +6,7 @@ pub struct Edge {
     id: u64,
     pub(crate) from: u64,
     pub(crate) to: u64,
-    pub(crate) weight: f64, // Adding weight for Dijkstra's algorithm
+    pub(crate) weight: f64,
     label: Option<String>,
     properties: HashMap<String, String>,
 }
@@ -17,7 +17,7 @@ impl Edge {
             id,
             from,
             to,
-            weight, // Initialize the weight
+            weight,
             label,
             properties: HashMap::new(),
         }
@@ -26,31 +26,26 @@ impl Edge {
     pub fn id(&self) -> u64 {
         self.id
     }
-
     pub fn from(&self) -> u64 {
         self.from
     }
-
     pub fn to(&self) -> u64 {
         self.to
     }
-
     pub fn weight(&self) -> f64 {
         self.weight
     }
-
     pub fn label(&self) -> Option<&String> {
         self.label.as_ref()
     }
-
     pub fn set_property(&mut self, key: String, value: String) {
         self.properties.insert(key, value);
     }
-
     pub fn get_property(&self, key: &str) -> Option<&String> {
         self.properties.get(key)
     }
 }
+
 
 #[cfg(test)]
 mod tests {

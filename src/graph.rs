@@ -10,7 +10,7 @@ pub struct Graph {
     pub nodes: HashMap<u64, Node>,
     pub edges: HashMap<u64, Edge>,
     pub adjacency_list: HashMap<u64, Vec<u64>>,
-    pub core_nodes: HashSet<u64>,  // To track core nodes
+    pub core_nodes: HashSet<u64>,
 }
 
 impl Graph {
@@ -28,12 +28,15 @@ impl Graph {
     }
 
     pub fn add_edge(&mut self, from: u64, to: u64, weight: f64, label: Option<String>) {
-        let edge_id = self.generate_edge_id(); // Assume you have this function to generate unique IDs
+        let edge_id = self.generate_edge_id();
         let edge = Edge::new(edge_id, from, to, weight, label);
         self.edges.insert(edge_id, edge);
         self.adjacency_list.entry(from).or_insert_with(Vec::new).push(edge_id);
     }
 
+    fn generate_edge_id(&self) -> u64 {
+        self.edges.len() as u64 + 1
+    }
 
     pub fn get_node(&self, id: u64) -> Option<&Node> {
         self.nodes.get(&id)
@@ -98,15 +101,16 @@ impl Graph {
         let mut distances = HashMap::new();
         let mut priority_queue = BinaryHeap::new();
 
-        for &node in &self.nodes {
+        // Initialize distances to INFINITY, except for the start node
+        for &node in self.nodes.keys() {
             distances.insert(node, f64::INFINITY);
         }
-        distances.insert(start_node, 0.0);
-        priority_queue.push((FloatOrd(0.0), start_node));
+        distances.insert(start_node, 0.0);  // Start node has a distance of 0
+        priority_queue.push((FloatOrd(0.0), start_node));  // Push the start node onto the priority queue
 
         while let Some((FloatOrd(cost), u)) = priority_queue.pop() {
             if cost > distances[&u] {
-                continue;
+                continue;  // Skip this node if we've already found a cheaper path
             }
             if let Some(edges) = self.adjacency_list.get(&u) {
                 for &edge_id in edges {
@@ -114,15 +118,16 @@ impl Graph {
                     let next = edge.to;
                     let next_cost = cost + edge.weight();
                     if next_cost < distances[&next] {
-                        distances.insert(next, next_cost);
-                        priority_queue.push((FloatOrd(-next_cost), next));
+                        distances.insert(next, next_cost);  // Update the shortest path to this node
+                        priority_queue.push((FloatOrd(-next_cost), next));  // Push the next node to the priority queue
                     }
                 }
             }
         }
 
-        distances
+        distances  // Return the map of shortest distances from the start node to all other nodes
     }
+
 }
 
 #[derive(PartialEq, PartialOrd)]
@@ -153,14 +158,13 @@ mod tests {
     #[test]
     fn test_add_and_retrieve_edge() {
         let mut graph = Graph::new();
-        let node1 = Node::new(1, Some("Label".to_string()));
-        let node2 = Node::new(2, Some("Label".to_string()));
-        graph.add_node(node1);
-        graph.add_node(node2);
+        graph.add_node(Node::new(1, Some("Label".to_string())));
+        graph.add_node(Node::new(2, Some("Label".to_string())));
 
-        let edge = Edge::new(1, 1, 2, Some("RelatedTo".to_string()));
-        graph.add_edge(edge);
+        // Adjust the parameters to match the add_edge signature
+        graph.add_edge(1, 2, 1.0, Some("RelatedTo".to_string()));
 
+        // Assuming you want to test if the edge was added correctly
         assert!(graph.get_edge(1).is_some());
         assert_eq!(graph.adjacency_list.get(&1).unwrap().len(), 1);
     }

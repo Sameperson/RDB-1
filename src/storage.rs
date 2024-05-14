@@ -27,20 +27,17 @@ impl Storage {
 mod tests {
     use super::*;
     use crate::node::Node;
-    use crate::edge::Edge;
     use crate::graph::Graph;
     use tempfile::NamedTempFile;
 
     #[test]
     fn test_save_and_load_graph() {
         let mut graph = Graph::new();
-        let node1 = Node::new(1, Some("Node1".to_string()));
-        let node2 = Node::new(2, Some("Node2".to_string()));
-        graph.add_node(node1);  // ID and Label are now directly passed
-        graph.add_node(node2);
+        graph.add_node(Node::new(1, Some("Node1".to_string()))); // Correctly adding nodes
+        graph.add_node(Node::new(2, Some("Node2".to_string())));
 
-        let edge = Edge::new(1, 1, 2, Some("connects".to_string()));
-        graph.add_edge(edge);
+        // Adding edge directly with the parameters expected by `add_edge`
+        graph.add_edge(1, 2, 1.0, Some("connects".to_string())); // assuming weight is required as per your setup
 
         let mut temp_file = NamedTempFile::new().unwrap();
         let file_path = temp_file.path().to_str().unwrap().to_string();
