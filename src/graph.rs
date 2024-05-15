@@ -172,6 +172,7 @@ impl Ord for FloatOrd {
 
 #[cfg(test)]
 mod tests {
+    use std::io::Cursor;
     use super::*;
 
     #[test]
@@ -195,5 +196,26 @@ mod tests {
         // Assuming you want to test if the edge was added correctly
         assert!(graph.get_edge(1).is_some());
         assert_eq!(graph.adjacency_list.get(&1).unwrap().len(), 1);
+    }
+
+    #[test]
+    fn test_dijkstra_algorithm() {
+        let mut graph = Graph::new();
+        graph.add_node(Node::new(1, Some("Node 1".to_string())));
+        graph.add_node(Node::new(2, Some("Node 2".to_string())));
+        graph.add_node(Node::new(3, Some("Node 3".to_string())));
+        graph.add_node(Node::new(4, Some("Node 4".to_string())));
+
+        graph.add_edge(1, 2, 1.0, Some("Edge 1-2".to_string()));
+        graph.add_edge(1, 3, 4.0, Some("Edge 1-3".to_string()));
+        graph.add_edge(2, 3, 2.0, Some("Edge 2-3".to_string()));
+        graph.add_edge(3, 4, 1.0, Some("Edge 3-4".to_string()));
+
+        let distances = graph.dijkstra(1);
+
+        assert_eq!(distances[&1], 0.0);
+        assert_eq!(distances[&2], 1.0);
+        assert_eq!(distances[&3], 3.0);
+        assert_eq!(distances[&4], 4.0);
     }
 }
