@@ -1,6 +1,8 @@
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashMap, HashSet};
+use std::fs::File;
 use serde::{Deserialize, Serialize};
+use std::io::{Write, Result as IoResult};
 
 use crate::edge::Edge;
 use crate::node::Node;
@@ -101,33 +103,59 @@ impl Graph {
         let mut distances = HashMap::new();
         let mut priority_queue = BinaryHeap::new();
 
-        // Initialize distances to INFINITY, except for the start node
+        // Initialize all distances to infinity
         for &node in self.nodes.keys() {
             distances.insert(node, f64::INFINITY);
         }
-        distances.insert(start_node, 0.0);  // Start node has a distance of 0
-        priority_queue.push((FloatOrd(0.0), start_node));  // Push the start node onto the priority queue
+        distances.insert(start_node, 0.0);
+
+        // Start with the source node
+        priority_queue.push((FloatOrd(-0.0), start_node));  // Use negative for min-heap effect
 
         while let Some((FloatOrd(cost), u)) = priority_queue.pop() {
-            if cost > distances[&u] {
-                continue;  // Skip this node if we've already found a cheaper path
+            let actual_cost = -cost;  // Convert back to positive
+
+            // If the popped node has a cost greater than the current known cost, skip processing
+            if actual_cost > distances[&u] {
+                continue;
             }
+
+            // Explore each adjacent node
             if let Some(edges) = self.adjacency_list.get(&u) {
                 for &edge_id in edges {
                     let edge = &self.edges[&edge_id];
                     let next = edge.to;
-                    let next_cost = cost + edge.weight();
+                    let next_cost = actual_cost + edge.weight();  // Edge weight should be non-negative
                     if next_cost < distances[&next] {
-                        distances.insert(next, next_cost);  // Update the shortest path to this node
-                        priority_queue.push((FloatOrd(-next_cost), next));  // Push the next node to the priority queue
+                        distances.insert(next, next_cost);
+                        priority_queue.push((FloatOrd(-next_cost), next));  // Continue using negative for min-heap
                     }
                 }
             }
         }
 
-        distances  // Return the map of shortest distances from the start node to all other nodes
+        distances
     }
 
+    pub fn write_dot(&self, filename: &str) -> IoResult<()> {
+        let mut file = File::create(filename)?;
+        writeln!(file, "digraph G {{")?;
+        for node in self.nodes.keys() {
+            writeln!(file, "    {} [label=\"Node {}\"];", node, node)?;
+        }
+        for edge in self.edges.values() {
+            writeln!(
+                file,
+                "    {} -> {} [label=\"{}\", weight={}];",
+                edge.from(),
+                edge.to(),
+                edge.label().unwrap_or(&String::from("")),
+                edge.weight()
+            )?;
+        }
+        writeln!(file, "}}")?;
+        Ok(())
+    }
 }
 
 #[derive(PartialEq, PartialOrd)]
