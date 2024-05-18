@@ -137,15 +137,14 @@ impl Graph {
         distances
     }
 
-    pub fn write_dot(&self, filename: &str) -> IoResult<()> {
-        let mut file = File::create(filename)?;
-        writeln!(file, "digraph G {{")?;
+    pub fn write_dot_to_writer<W: Write>(&self, writer: &mut W) -> IoResult<()> {
+        writeln!(writer, "digraph G {{")?;
         for node in self.nodes.keys() {
-            writeln!(file, "    {} [label=\"Node {}\"];", node, node)?;
+            writeln!(writer, "    {} [label=\"Node {}\"];", node, self.nodes[node].label().unwrap_or(&String::from("")));
         }
         for edge in self.edges.values() {
             writeln!(
-                file,
+                writer,
                 "    {} -> {} [label=\"{}\", weight={}];",
                 edge.from(),
                 edge.to(),
@@ -153,8 +152,13 @@ impl Graph {
                 edge.weight()
             )?;
         }
-        writeln!(file, "}}")?;
+        writeln!(writer, "}}")?;
         Ok(())
+    }
+
+    pub fn write_dot(&self, filename: &str) -> IoResult<()> {
+        let mut file = File::create(filename)?;
+        self.write_dot_to_writer(&mut file)
     }
 }
 
@@ -217,5 +221,29 @@ mod tests {
         assert_eq!(distances[&2], 1.0);
         assert_eq!(distances[&3], 3.0);
         assert_eq!(distances[&4], 4.0);
+    }
+
+    #[test]
+    fn test_write_dot() {
+        let mut graph = Graph::new();
+        graph.add_node(Node::new(1, Some("Node 1".to_string())));
+        graph.add_node(Node::new(2, Some("Node 2".to_string())));
+        graph.add_edge(1, 2, 1.0, Some("Edge 1-2".to_string()));
+
+        let mut output = Vec::new();
+        {
+            let mut cursor = Cursor::new(&mut output);
+            graph.write_dot_to_writer(&mut cursor).expect("Failed to write DOT");
+        }
+
+        let dot_output = String::from_utf8(output).expect("Output is not valid UTF-8");
+        let expected_dot = r#"digraph G {
+    1 [label="Node 1"];
+    2 [label="Node 2"];
+    1 -> 2 [label="Edge 1-2", weight=1];
+}
+"#;
+
+        assert_eq!(dot_output.trim(), expected_dot.trim());
     }
 }
